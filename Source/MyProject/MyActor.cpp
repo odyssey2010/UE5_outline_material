@@ -9,12 +9,20 @@ AMyActor::AMyActor()
 	
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
-		
-	static FString Path = TEXT("/Game/M_Overlay");
-	//static FString Path = TEXT("/Game/M_Outline");
-	static ConstructorHelpers::FObjectFinder<UMaterial> Material(*Path);
 
-	MyMaterial = Material.Object;
+	bool UseOutline = true;
+	if (UseOutline)
+	{
+		static FString Path = TEXT("/Game/M_Outline");
+		static ConstructorHelpers::FObjectFinder<UMaterial> Material(*Path);
+		MyMaterial = Material.Object;
+	}
+	else
+	{
+		static FString Path = TEXT("/Game/M_Overlay");
+		static ConstructorHelpers::FObjectFinder<UMaterial> Material(*Path);
+		MyMaterial = Material.Object;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -33,19 +41,34 @@ void AMyActor::NotifyActorOnClicked(FKey PressedButton)
 {
 	UE_LOG(LogTemp, Log, TEXT("NotifyActorOnClicked %s"), *GetName());
 
-	TArray<AActor*> MyActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMyActor::StaticClass(), MyActors);
-
-	for (auto Actor : MyActors)
+	bool ToggleHighlight = true;
+	if (ToggleHighlight)
 	{
-		AMyActor* MyActor = Cast<AMyActor>(Actor);
-		if (MyActor != this)
+		if (StaticMeshComponent->GetOverlayMaterial())
 		{
-			MyActor->StaticMeshComponent->SetOverlayMaterial(nullptr);
+			StaticMeshComponent->SetOverlayMaterial(nullptr);
 		}
 		else
 		{
-			MyActor->StaticMeshComponent->SetOverlayMaterial(MyMaterial);
+			StaticMeshComponent->SetOverlayMaterial(MyMaterial);
+		}
+	}
+	else
+	{
+		TArray<AActor*> MyActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMyActor::StaticClass(), MyActors);
+
+		for (auto Actor : MyActors)
+		{
+			AMyActor* MyActor = Cast<AMyActor>(Actor);
+			if (MyActor != this)
+			{
+				MyActor->StaticMeshComponent->SetOverlayMaterial(nullptr);
+			}
+			else
+			{
+				MyActor->StaticMeshComponent->SetOverlayMaterial(MyMaterial);
+			}
 		}
 	}
 }
